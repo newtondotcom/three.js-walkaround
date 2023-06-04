@@ -1,19 +1,33 @@
 {
-  "name": "vite-project",
+  "name": "walkaround",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "vite": "^4.3.2"
   },
   "dependencies": {
     "@tweenjs/tween.js": "^20.0.3",
+    "gh-pages": "^5.0.0",
     "glob": "^10.2.2",
     "three": "^0.152.2"
-  }
+  },
+  "description": "This project is a Three.js html page displaying a real estate announcement",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/newtondotcom/three.js-walkaround.git"
+  },
+  "author": "Robin Augereau",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/newtondotcom/three.js-walkaround/issues"
+  },
+  "homepage": "https://github.com/newtondotcom/three.js-walkaround#readme"
 }
