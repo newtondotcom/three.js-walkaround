@@ -31,10 +31,33 @@
         scene.background = new THREE.Color(0x808080); // Gris moyen
         scene.fog = new THREE.Fog(0x808080, 0, 750); // Gris moyen pour le brouillard        
         
-
 				const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
 				light.position.set( 0.5, 1, 0.75 );
 				scene.add( light );
+
+        //Creating a clickable sphere
+        const canvas = document.createElement('canvas');
+        canvas.width = 256; // Set the desired width of the canvas
+        canvas.height = 256; // Set the desired height of the canvas
+        const context = canvas.getContext('2d');
+        context.font = 'Bold 80px Arial';
+        context.fillStyle = '#ffffff';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        const text = '↑';
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        context.fillText(text, centerX, centerY);
+        const texture = new THREE.CanvasTexture(canvas);
+        const material = new THREE.MeshBasicMaterial({ map: texture });
+        const radius = 0.2;
+        const widthSegments = 32;
+        const heightSegments = 32;
+        const geometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+        const sphere = new THREE.Mesh(geometry, material);
+        sphere.position.set(-2, 1.85,2.5);
+        scene.add(sphere);
+
 
         let isUserInteracting = false;
         let onMouseDownMouseX = 0;
@@ -82,16 +105,20 @@
 
             if (performance.now() - isClicked < delayThreshold) {
             const mouse = new THREE.Vector2();
-            const raycaster = new THREE.Raycaster();
+            const raycaster2 = new THREE.Raycaster();
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(scene.children, true);
+            raycaster2.setFromCamera(mouse, camera);
+            const intersects = raycaster2.intersectObjects(scene.children, true);
             if (isDragging == false) {
               if (intersects.length > 0) {
-                const { point } = intersects[0];
-                moveCameraToPoint(point);
-                console.log(point);
+                const { point, object } = intersects[0];
+                if (object === sphere) {
+                  console.log("sphere");
+                  moveToAnotherScene();
+                } else {
+                  moveCameraToPoint(point);
+                }
               }
             }
           }
@@ -105,10 +132,60 @@
           const distance = camera.position.distanceTo(point);
         
           const tween = new TWEEN.Tween(camera.position)
-            .to({ x: point.x, y: 1.5, z: point.z }, distance * 100) // Adjust the duration as needed
+            .to({ x: point.x, y: 1.85, z: point.z }, distance * 100) // Adjust the duration as needed
             .easing(TWEEN.Easing.Quadratic.InOut)
             .start();
         }
+
+        function moveToAnotherScene() {
+          const newCameraPosition = { x: 1.5, y: 2, z: 3 }; // Example values, replace with your desired coordinates
+          const newCameraRotation = { x: 0, y: 0, z: 0 }; // Example values, replace with your desired rotation
+          const newMarkerPosition = new THREE.Vector3(0, 0, 0); // Example values, replace with your desired marker position
+        
+          const startRotation = new THREE.Euler().copy(camera.rotation);
+          camera.lookAt(newMarkerPosition);
+          const endRotation = new THREE.Euler().copy(camera.rotation);
+          camera.rotation.copy(startRotation);
+        
+          new TWEEN.Tween(camera.rotation)
+            .to(
+              {
+                x: endRotation.x,
+                y: endRotation.y,
+                z: endRotation.z,
+              },
+              500
+            )
+            .easing(TWEEN.Easing.Quadratic.InOut)
+            .onComplete(() => {
+              new TWEEN.Tween(camera.position)
+                .to(newCameraPosition, 500)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .onUpdate(() => {
+                  camera.lookAt(newMarkerPosition);
+                })
+                .onComplete(() => {
+                  camera.lookAt(newMarkerPosition);
+                  const radius = Math.hypot(
+                    newCameraPosition.x - newMarkerPosition.x,
+                    newCameraPosition.y - newMarkerPosition.y,
+                    newCameraPosition.z - newMarkerPosition.z
+                  );
+                  const phi = Math.acos((newCameraPosition.y - newMarkerPosition.y) / radius);
+                  const theta = Math.atan2(
+                    newCameraPosition.z - newMarkerPosition.z,
+                    newCameraPosition.x - newMarkerPosition.x
+                  );
+                  const lon = THREE.MathUtils.radToDeg(theta);
+                  const lat = 90 - THREE.MathUtils.radToDeg(phi);
+
+                })
+                .start();
+            })
+            .start();
+        }
+        
+          
 
 				// scene
         var loader = new GLTFLoader();
